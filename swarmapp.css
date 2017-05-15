@@ -1,0 +1,150 @@
+* {
+  margin:0;
+  padding: 0;
+}
+
+header {
+  height: 40px;
+  width: 100%;
+  background-color: #24292e;
+  color: whitesmoke;
+}
+
+content {
+  background-color: #32363f;
+  display: block;
+  height: 100vh;
+  padding: 0 20px;
+  font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
+}
+
+menu {
+  height: 100px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.selected {
+  background-color: #34a6ff;
+  color: white;
+}
+
+.main-menu-item {
+  width: 30%;
+  height: 100px;
+  display: inline-block;
+  border: 1px solid #34a6ff;
+  vertical-align: middle;
+  flex: 1 1 auto;
+  line-height: 100px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.main-menu-item:hover {
+  background-color: #34a6ff;
+  color: white;
+}
+
+.main-menu-item span {
+  color: white;
+  margin-top: 40px;
+}
+
+.app-content {
+  margin-top: 50px;
+  display: flex;
+}
+
+.middle-pane {
+  height: 60vh;
+  display: inline-block;
+  flex-grow: 1;
+}
+
+.content-pane {
+  width: 45%;
+  height: 60vh;
+  display: inline-block;
+  border: 1px solid #34a6ff;
+  padding: 20px;
+  color: #f6eeee;
+}
+
+.shortcuts-pane {
+  display: inline-block;
+  vertical-align: top;
+  width: 25%;
+  height: 60vh;
+}
+
+.full-content-pane {
+  width: 100%;
+}
+
+#listed-files {
+  display: inline-block;
+  width: 74%;
+  height: 60vh;
+  overflow: auto;
+} 
+
+#listed-files li {
+  height: 2em;
+  line-height: 2em;
+  cursor: pointer;
+}
+
+.shortcut {
+  cursor: pointer;
+}
+
+#drag-file {
+  color:white;
+  text-align: right;
+  display:flex;
+}
+
+.results {
+  display: none;
+  font-weight: bold;
+  color: #34a6ff;
+  text-align: center;
+  padding: 10px;
+  border: 1px solid #34a6ff;
+}
+
+#upload-result {
+  width: 100%;
+}
+
+.result-title {
+  text-align: center;
+  font-size: 1em;
+}
+
+.results-content {
+  font-size: 1.3em;
+}
+
+.listings {
+  width: 100%;
+  margin-top: 25px;
+  border: 1px solid #34a6ff;
+  padding: 20px;
+  color: #f6eeee; 
+}
+
+.listings thead tr {
+  background-color:#667;
+}
+
+.listings thead tr td {
+  padding: 6px;
+  margin-bottom: 10px;
+} 
+
+.listings tbody tr td {
+  padding: 3px;
+  border-bottom: 1px solid #34a6ff;
+}

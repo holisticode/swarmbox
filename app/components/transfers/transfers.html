@@ -1,0 +1,20 @@
+<div class="app-content">
+  <div class="full-content-pane">
+      <table class="listings">
+        <thead>
+           <td>Date</td>
+           <td>Hash</td>
+           <td>Local Path</td>
+        </thead>
+        <tbody>
+          <tr ng-repeat="hash in vm.hashes">
+            <td width="30%">{{hash.timestamp}}</td>
+            <td width="35%">{{hash.hash}}</td>
+            <td width="35%">{{hash.path}}</td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+  <div class="middle-pane">
+  </div>
+</div> 

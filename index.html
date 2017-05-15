@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Ethererum Swarm P2P Decentralized Storage</title>
+    <link href="swarmapp.css" rel="stylesheet" type="text/css">
+    <link href="bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  </head>
+  <body ng-app='swarmapp'>
+    <header>
+    </header>
+    <content>
+      <menu>
+        <div class="main-menu-item selected" ui-sref="files">
+          <span>Files</span>
+        </div>
+        <div class="main-menu-item" ui-sref="transfers">
+          <span>Transfers</span>
+        </div>
+        <div class="main-menu-item">
+          <span>Configuration</span>
+        </div>
+      </menu>
+      <div ui-view=""></div>
+    </content>
+    <footer>
+    </footer>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script src="renderer.js"></script>
+    <script src="ngapp.js"></script>
+    <script src="app/components/files/index.js"></script>
+    <script src="app/components/transfers/index.js"></script>
+  </body>
+
+</html>

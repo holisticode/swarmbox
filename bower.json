@@ -1,0 +1,32 @@
+{
+  "name": "swarmapp",
+  "description": "Desktop app for Swarm, P2P distributed storage",
+  "main": "main.js",
+  "authors": [
+    "Ethersphere"
+  ],
+  "license": "CC0-1.0",
+  "keywords": [
+    "swarm",
+    "p2p",
+    "decentralized",
+    "storage",
+    "content",
+    "web3"
+  ],
+  "homepage": "http://swarm-gateways.net",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "font-awesome": "^4.7.0"
+    "angular": "^1.6.4",
+    "angular-ui-router": "^1.0.3"
+  },
+  "devDependencies": {
+  }
+}
