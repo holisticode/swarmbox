@@ -57,6 +57,20 @@ function filesController() {
 
 
     document.getElementById('drag-file').style.background = 'url("img/loader.gif") no-repeat center';
+    var gopath = process.env.GOPATH;
+    if (!gopath) {
+      console.log("FATAL: Can not run swarmapp without $GOPATH! Either set $GOPATH or you may need to install Go. Exiting.");
+      return;
+    }
+
+    var swarmpath = gopath + "/bin/swarm";
+
+    fs.stat(swarmpath,(err,stats)=>{
+        if(err) {
+          console.log("FATAL: Couldn't find the swarm binary on your machine! Did you install it? Existing.")
+          return;
+        }
+
     execute('/home/fabio/go/bin/swarm --bzzapi http://swarm-gateways.net up ' + path, function(output) {
       document.getElementById('drag-file').style.background = "none";
       console.log("swarm executed successfully!");
@@ -67,6 +81,7 @@ function filesController() {
       document.getElementById('upload-result').style.display = "inline-block";
       document.getElementById('upload-result').innerHTML += "<button type='button' onclick='addToHashes()' class='action'>Add To My Hashes</button>";
     })    
+    })
 
     return false;
   };
