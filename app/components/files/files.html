@@ -1,15 +1,75 @@
+<div class="content-wrapper">
+  <div class="content-header">
+      <h3>Browse your file system</h3>
+  </div>
+    
+  <div class="filler"></div>
+
+  <div class="content-header">
+      <h3>Browse your Swarmbox</h3>
+  </div>
+</div>
 <div class="app-content">
-  <div class="content-pane" id="file-browser">
-    <div class="shortcuts-pane">
-      <div class="shortcut" onclick="readFolder(getOsRoot());"><i class="fa fa-anchor" aria-hidden="true"></i> Root</div> 
-      <div class="shortcut" onclick="readFolder(getOsHome())"><i class="fa fa-home" aria-hidden="true"></i> Home</div>
+    <div class="content-pane" id="file-browser">
+      <div class="shortcuts-pane">
+        <div class="shortcut" onclick="readFolder(getOsRoot());"><i class="fa fa-anchor" aria-hidden="true"></i> Root</div> 
+        <div class="shortcut" onclick="readFolder(getOsHome())"><i class="fa fa-home" aria-hidden="true"></i> Home</div>
+      </div>
+      <div id="listed-files"></div>
     </div>
-    <div id="listed-files"></div>
-  </div>
-  <div class="middle-pane">
-  </div>
-  <div class="content-pane" id="drag-file">
-    <div class="results" id="upload-result">
+
+    <div class="middle-pane"></div>
+
+    <div class="content-pane" id="swarmbox">
+      <ol id='swarmbox-files'> 
+        <li ng-repeat-start="d in curr_dirs"  draggable="true" ondragstart="itemDrag(event)" type="dir"  id="{{d}}" ng-dblclick="openItem(this.id)">    <i class="fa fa-folder-open"></i>{{d}}</li>
+        <hr ng-repeat-end>
+        <li ng-repeat-start="f in curr_files" draggable="true" ondragstart="itemDrag(event)" type="file" id="{{f.path}}" ng-dblclick="downloadFile(this.id)"><i class="fa fa-file"></i>{{f.path}}</li>
+        <hr ng-repeat-end>
+      </ol> 
     </div>
+</div>
+<div class="app-content">
+  <div class="upload-content-pane" id="upload-area">
+     Drag files here to upload
   </div>
-</div> 
+  <div class="results" id="upload-result">
+  </div>
+</div>
+
+  <div class="dialog" id="hashModal">
+    <script type="text/ng-template" id="hashDialogContent.html">
+      <div class="modal-header">
+        <h3>{{$ctrl.currentDialogTitle}}</h3>
+      </div>
+      <div class="modal-body" id="hashModalBody">
+        <div class="hasBox" ng-hide="$ctrl.hasBoxShown">
+          <button class="btn btn-primary yesno" type="submit" ng-click="$ctrl.has()">Yes</button>
+          <button class="btn btn-primary yesno" type="submit" ng-click="$ctrl.hasNot()">No</button>
+        </div>
+
+        <div class="hasNoBox" ng-show="$ctrl.hasBoxShown && !$ctrl.hasBox">
+          <div class="alert alert-info" role="alert">Info: If the folder you select is empty, a small README.TXT file will be created in the folder. Swarm can not upload empty folders.</div>
+          <br/>
+          <input type="file" selectfolder="$ctrl.swarmboxFolder" webkitdirectory directory ng-hide="$ctrl.swarmboxFolder" />
+          <div class="confirmFolder" ng-show="$ctrl.swarmboxFolder">
+            <p>You selected folder <span ng-bind="$ctrl.swarmboxFolder"></span></p>
+            <br/>
+            <br/>
+            <h4>Are you sure you want to use this folder as your Swarmbox folder?</h4>
+            <div class="alert alert-warning" role="alert">The complete content of the folder will be uploaded</div>
+            <div class="hasBox">
+              <button class="btn btn-primary yesno yes" type="submit" ng-click="$ctrl.confirmFolder()">Yes</button>
+              <button class="btn btn-primary yesno no" type="submit" ng-click="$ctrl.dontUseFolder()">No</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="insertHash" ng-show="$ctrl.hasBoxShown && $ctrl.hasBox && !$ctrl.selectFolder">
+          <input type="text" placeholder="Your (last) SwarmboxHash here" name="swarmboxHash" ng-model="$ctrl.swarmHash" ng-required ng-min-length="64" ng-max-length="64">
+          <br/>
+          <button class="btn btn-primary" type="submit" ng-click="$ctrl.ok()">Connect to your Swarmbox</button>
+        </div>
+      </div>
+    </script>
+  </div>

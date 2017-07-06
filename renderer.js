@@ -60,11 +60,13 @@ function readFolder(path) {
                  *
                  */
                 var theID = fullpath;
+                var type = "file";
 
                 if (stats.isDirectory()) { 
-                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" id=${theID} ondblclick="readFolder(this.id)"><i class="fa fa-folder-open"></i> ${file}</li><hr>`; 
+                  type="dir";
+                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" type=type id=${theID} ondblclick="readFolder(this.id)"><i class="fa fa-folder-open"></i>${file}</li><hr>`; 
                 } else { 
-                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" id=${theID} ondblclick="openFile(this.id)"><i class="fa fa-file"></i> ${file}</li><hr>`; 
+                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" type=type id=${theID} ondblclick="openFile(this.id)"><i class="fa fa-file"></i>${file}</li><hr>`; 
                 }
             });
         }
@@ -73,7 +75,8 @@ function readFolder(path) {
 
 function itemDrag(event) {
   let path = event.target.id;
-  event.dataTransfer.setData("uploadfiles", path);;
+  event.dataTransfer.setData("uploadfiles", path);
+  event.dataTransfer.setData("isDirectory", event.target.type=="dir" );
 }
 
 //open the file with the default application 
@@ -87,6 +90,10 @@ function getOsRoot() {
 
 function getOsHome() {
   return os.homedir();
+}
+
+function openItem(id) {
+
 }
 
 function showTransfers() {

@@ -1,10 +1,9 @@
 'use strict';
 
-FilesController.$inject = ['$state'];
+FilesController.$inject = ['$state', '$http'];
 
-function FilesController($state) {
-    var vm = this;
-
+function FilesController($state, $http) {
+  var vm = this;
 }
 
 module.exports = FilesController;
