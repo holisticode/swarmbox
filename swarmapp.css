@@ -3,6 +3,12 @@
   padding: 0;
 }
 
+body {
+  min-height: 100%;
+  min-width: 100%;
+  overflow: hidden;
+} 
+
 header {
   height: 40px;
   width: 100%;
@@ -126,6 +132,10 @@ menu {
   cursor: pointer;
 }
 
+.shortcut.active {
+  color:  #34a6ff;
+} 
+
 #drag-file {
   color:white;
   text-align: right;
@@ -138,20 +148,36 @@ menu {
   color: #34a6ff;
   text-align: center;
   padding: 10px;
-  border: 1px solid #34a6ff;
 }
 
 #upload-result {
   width: 100%;
 }
 
-.result-title {
+.results-title {
   text-align: center;
   font-size: 1em;
+  width: 80%;
+  line-height: 1em;
 }
 
 .results-content {
-  font-size: 1.3em;
+  font-size: 1.2em;
+  line-height: 1em;
+  margin-top: 5px;
+}
+
+.results-actions {
+  width: 20%;
+  line-height: 1em;
+}
+
+.btn-normal {
+  background: transparent;
+  border: 1px solid #34a6ff;
+  padding: 10px;
+  margin: 10px 0;
+  float: left;
 }
 
 .listings {
@@ -184,6 +210,16 @@ menu {
 
 li i {
   width: 25px;
+}
+
+li {  
+  padding: 4px;
+  cursor: pointer;
+}
+
+hr {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
 }
 
 .modal-dialog {
@@ -240,3 +276,16 @@ li i {
   width: 50%;
   margin: 10px 25%;
 }
+
+.dir:hover {
+  background-color: #34a6ff;
+} 
+
+.inline {
+  display: inline-block;
+}
+
+.content-header h3 {
+  margin-right: 10px;
+}
+

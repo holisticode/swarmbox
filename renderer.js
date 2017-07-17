@@ -24,7 +24,7 @@ function execute(command, callback) {
 };
 
 
-function addToHashes() {
+function addToHashes(lastoutput, lastpath) {
   hashes[lastoutput] = {timestamp: new Date(), hash: lastoutput, path: lastpath};
 }
 
@@ -35,6 +35,21 @@ function readFolder(path) {
 
         //Dynamically add <ol> tags to the div
         document.getElementById('listed-files').innerHTML = `<ol id="display-files"></ol>`;
+
+        if (path == getOsHome()) {
+          let lst = document.getElementsByClassName("shortcut");
+          for (let i=0; i<lst.length; i++) {
+            lst[i].classList.remove('active');
+          } 
+          document.getElementById('os-home').classList.add('active');
+        } else if (path == getOsRoot()) {
+          let lst = document.getElementsByClassName("shortcut");
+          for (let i=0; i<lst.length; i++) {
+            lst[i].classList.remove('active');
+          } 
+          document.getElementById('os-root').classList.add('active');
+        }
+ 
 
         let last = path.lastIndexOf("/");
         let parent = null;
@@ -66,9 +81,9 @@ function readFolder(path) {
 
                 if (stats.isDirectory()) { 
                   type="dir";
-                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" type=type id=${theID} ondblclick="readFolder(this.id)"><i class="fa fa-folder-open"></i>${file}</li><hr>`; 
+                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" type=${type} id=${theID} ondblclick="readFolder(this.id)"><i class="fa fa-folder-open"></i>${file}</li><hr>`; 
                 } else { 
-                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" type=type id=${theID} ondblclick="openFile(this.id)"><i class="fa fa-file"></i>${file}</li><hr>`; 
+                  document.getElementById('display-files').innerHTML += `<li draggable="true" ondragstart="itemDrag(event)" type=${type} id=${theID} ondblclick="openFile(this.id)"><i class="fa fa-file"></i>${file}</li><hr>`; 
                 }
             });
         }

@@ -8,7 +8,7 @@ angular.module('swarmapp').component('loadingSwarmboxComponent', {
   controller: function (PubSub) {
     var $ctrl = this;
 
-    $ctrl.title     = "Connecting to you swarmbox...";
+    $ctrl.title     = "Connecting to your swarmbox...";
     $ctrl.messages  = [];
     $ctrl.status    = "";
     $ctrl.endpoint  = "";

@@ -26,16 +26,17 @@
       <div ui-view=""></div>
     </content>
     <div class="dialog" id="errorDialog">
-    <script type="text/ng-template" id="errorDialog.html">
-      <div class="modal-header">
-        <h3>{{$ctrl.title}}</h3>
-      </div>
-      <div class="modal-body" id="dialogBody">
-        <div class="errorText">{{$ctrl.error}}
+      <script type="text/ng-template" id="errorDialog.html">
+        <div class="modal-header">
+          <h3>{{$ctrl.title}}</h3>
         </div>
-        <button class="btn btn-big btn-primary yes" type="submit" ng-click="$ctrl.cancel()">Ok</button>
+        <div class="modal-body" id="dialogBody">
+          <div class="errorText">{{$ctrl.error}}
+          </div>
+          <button class="btn btn-big btn-primary yes" type="submit" ng-click="$ctrl.cancel()">Ok</button>
+        </div>
+      </script>
       </div>
-    </script>
     <footer>
     </footer>
     <script src="bower_components/angular/angular.min.js"></script>
@@ -44,8 +45,6 @@
     <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
     <script src="renderer.js"></script>
     <script src="ngapp.js"></script>
-    <script src="app/components/files/index.js"></script>
-    <script src="app/components/transfers/index.js"></script>
   </body>
 
 </html>
