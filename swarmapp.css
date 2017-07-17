@@ -19,9 +19,9 @@ content {
 }
 
 menu {
+  width: 100%;
   height: 100px;
-  display: flex;
-  justify-content: space-between;
+  display: flex !important;
 }
 
 .selected {
@@ -35,7 +35,6 @@ menu {
   display: inline-block;
   border: 1px solid #34a6ff;
   vertical-align: middle;
-  flex: 1 1 auto;
   line-height: 100px;
   text-align: center;
   cursor: pointer;
@@ -217,3 +216,27 @@ li i {
   background-color: red !important;
 }
 
+.ok {
+  color: green;
+}
+
+.failed {
+  color: red;
+}
+
+.loading-area {
+  font-size: 0.8em;
+  line-height: 0.8em;
+  padding: 0 20px;
+}
+
+.loader {
+  background: url("img/loader.gif") no-repeat center;
+  background-size: 120px;
+  height: 140px;
+}
+
+.btn-big {
+  width: 50%;
+  margin: 10px 25%;
+}

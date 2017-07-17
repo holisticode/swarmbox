@@ -2,13 +2,15 @@ var tar = require('tar-fs');
 var request = require('request');
 
 require("./app/components/dialogs/hashDialog");
+require("./app/components/dialogs/errorDialog");
+require("./app/components/dialogs/loadingSwarmboxDialog");
 
 (function () {
 'use strict';
 
 const ENDPOINT = "http://localhost:8500";
+const GATEWAY = "http://swarm-gateways.net";
 const HASH_LENGTH = 64;
-//const ENDPOINT = "http://swarm-gateways.net";
 
 angular.module('swarmapp')
   .directive("selectfolder", [function () {
@@ -27,7 +29,7 @@ angular.module('swarmapp')
 }]);
 
 angular.module('swarmapp')
-        .controller('FilesRouter', ['$stateProvider','$http', '$compile', '$scope', 'startState', 'swarmboxHash', FilesRouter]);
+        .controller('FilesRouter', ['$stateProvider','$http', '$compile', '$scope', 'ErrorService', 'PubSub', '$uibModal', 'startState', 'swarmboxHash', FilesRouter]);
 
 
 function FilesRouter($stateProvider) {
@@ -46,7 +48,7 @@ function FilesRouter($stateProvider) {
 
 angular.module('swarmapp').config(FilesRouter);
 
-function FilesController($http, $compile, $scope, $uibModal, startState, swarmboxHash) {
+function FilesController($http, $compile, $scope, ErrorService, PubSub, $uibModal, startState, swarmboxHash) {
 
   $scope.curr_dirs = [];
   $scope.curr_files = [];
@@ -103,13 +105,18 @@ function FilesController($http, $compile, $scope, $uibModal, startState, swarmbo
 
     var swarmpath = gopath + "/bin/swarm";
     */
-    var h = swarmboxHash.getLastHash();
-    if (!h) {
-      console.log("Swarmbox root hash is not defined. Can't connect to swarmbox. Aborting");
-      return;
-    }
-    updateSwarmbox($http, path, isDir, h);
-    return false;
+    swarmboxHash.getLastHash(startState.isStarted(), function(err, h) {
+      if (err) {
+        console.log("Error looking up last hash for Swarmbox");
+        return
+      }
+      if (!h) {
+        console.log("Swarmbox root hash is not defined. Can't connect to swarmbox. Aborting");
+        return;
+      }
+      updateSwarmbox($http, path, isDir, h);
+      return false;
+    });
   };
 
   $scope.openHashDialog = function() {
@@ -124,34 +131,47 @@ function FilesController($http, $compile, $scope, $uibModal, startState, swarmbo
     });
 
     modalInstance.result.then(function (hash) {
+      console.log("modal result: " + hash);
       $scope.swarmboxHash = hash;
       if (!hash) {
+        console.log("invalid hash, returning");
         return;
       }
-      connectToSwarmbox($http, hash, function(err, manifest) {
-        if (!err) {
-          processManifest($scope, manifest);
+      connectToSwarmbox($http, hash, PubSub, $uibModal, function(err, manifest) {
+        if (err) {
+          console.log("Error connecting to swarmbox");
+          console.log(err);
+          return
         }
+        swarmboxHash.setLastHash($scope.swarmboxHash, function(err) {
+            if (err) {
+              console.log("error setting last hash");
+              console.log(err);
+              return
+            }
+            processManifest($scope, manifest);
+          });
       }); 
     }, function () {
       //$log.info('modal-component dismissed at: ' + new Date());
     });
   };
 
-  var h = swarmboxHash.getLastHash();
+  var isStarted = startState.isStarted();
 
-  if (!startState.isStarted() && !h) {
-    $scope.openHashDialog();
-  } else if (h) {
-    connectToSwarmbox($http, h, function(err, manifest) {
-      if (!err) {
-        swarmboxHash.setLastHash($scope.swarmHash);
+  swarmboxHash.getLastHash(isStarted, function(err, hash) {
+    if (!isStarted && !hash) {
+      $scope.openHashDialog();
+    } else if (hash) {
+      connectToSwarmbox($http, hash, PubSub, $uibModal, function(err, manifest) {
+        if (err) {
+          ErrorService.showError("Failed to connect to Swarmbox. Do you have internet connection?");
+          return;
+        }
         processManifest($scope, manifest);
-      }
-    }); 
-  }
-
-
+      }); 
+    };
+  });
 }
 
 function updateSwarmbox($http, path, isDir, h) {
@@ -199,21 +219,48 @@ function getTar(path) {
   tar.pack(path);
 }
 
-function connectToSwarmbox($http, hash, cb) {
-  console.log("Connecting to swarm box...");
-  if (!hash || hash.length != HASH_LENGTH) {
-    console.log("Invalid hash provided, unable to connecto to Swarmbox. Aborting.");
-    return;
-  }
-  $http.get(ENDPOINT + "/bzz:/" + hash + "/?list=true").then(
+function connectToSwarmbox($http, hash, PubSub, $uibModal, cb) {
+  var modalInst = $uibModal.open({
+      animation: true,
+      component: 'loadingSwarmboxComponent'
+  });
+  modalInst.rendered.then(
     function(d) {
-      console.log("Successfully retrieved manifest for user's swarmbox");
-      cb(null, d.data);
-    },
-    function(e) {
-      console.log("Error connecting to Swarmbox");
-      console.log(e);
-      cb(e, null);
+      console.log("Connecting to swarm box...");
+      PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "connecting"});
+      if (!hash || hash.length != HASH_LENGTH) {
+        console.log("Invalid hash provided, unable to connecto to Swarmbox. Aborting.");
+        return;
+      }
+      $http.get(ENDPOINT + "/bzz:/" + hash + "/?list=true").then(
+        function(d) {
+          console.log("Successfully retrieved manifest for user's swarmbox");
+          PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "ok"});
+          modalInst.close();
+          cb(null, d.data);
+        },
+        function(e) {
+          console.log(e);
+          console.log("Error connecting to Swarmbox. Trying failover on gateway");
+          PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "failed"});
+          PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "connecting"});
+          $http.get(GATEWAY+ "/bzz:/" + hash + "/?list=true").then(
+            function(d) {
+              console.log("Successfully retrieved manifest for user's swarmbox");
+              PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "ok"});
+              modalInst.close();
+              cb(null, d.data);
+            },
+            function(e) {
+              console.log(e);
+              console.log("Gateway cnnection failed as well. Giving up");
+              PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "failed"});
+              modalInst.close();
+              cb(e, null);
+            }
+          );
+        }
+      );
     }
   );
 }

@@ -16,6 +16,8 @@ var hashes = {};
 var lastoutput = "";
 var lastpath = "";
 
+var HASH_FILE = ".swarmbox-hash";
+
 
 function execute(command, callback) {
     exec(command, function(error, stdout, stderr){ callback(stdout); });
@@ -99,4 +101,67 @@ function openItem(id) {
 function showTransfers() {
 }
 
+function persistHash(hash, cb) {
+  console.log("persist");
+  if (!fs.existsSync(HASH_FILE)) {
+    fs.closeSync(fs.openSync(HASH_FILE, 'w'));
+  }
+  readFirstLine(HASH_FILE, function(err, oldhash) {
+    if (err) {
+      console.log("Error reading hash file!");
+      throw err;
+    }
 
+    console.log("readFirst returned, oldhash: " + oldhash);
+    if (oldhash == hash) {
+      console.log("Old hash is same as new; not persisting.");
+      return;
+    }
+    if (isValidHash(hash)) {
+      console.log("valid hash, going to save");
+      var fd = fs.openSync(HASH_FILE, 'a+');
+      var newline = hash + "\n";
+      console.log(newline);
+      fs.write(fd, newline, 0, function(err, written, str) {
+        if (err) {
+          console.log("Error persisting hash to file!");
+          throw err;
+        }
+        console.log("Successully persisted new hash to file");
+        console.log(written);
+        console.log(str);
+        fs.closeSync(fd);
+        cb(null);    
+      });
+    } else {
+      console.log("invalid hash, not saving");
+    }
+  }); 
+ 
+}
+
+function isValidHash(hash) {
+  if (hash.length == 64) {
+    return true;
+  } 
+  return false;
+}
+
+function readFirstLine(path, cb) {
+    var rs = fs.createReadStream(path, {encoding: 'utf8'});
+    var acc = '';
+    var pos = 0;
+    var index;
+    rs
+      .on('data', function (chunk) {
+        index = chunk.indexOf('\n');
+        acc += chunk;
+        index !== -1 ? rs.close() : pos += chunk.length;
+      })
+      .on('close', function () {
+        cb(null, acc.slice(0, pos + index));
+      })
+      .on('error', function (err) {
+        cb(err,null);
+      })
+}

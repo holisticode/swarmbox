@@ -73,3 +73,19 @@
       </div>
     </script>
   </div>
+
+  <div class="dialog" id="loadingSwarmboxDialog">
+    <script type="text/ng-template" id="loadingSwarmboxContent.html">
+      <div class="modal-header">
+        <h3>{{$ctrl.title}}</h3>
+      </div>
+      <div class="modal-body" id="hashModalBody">
+        <div class="loading-area">
+          <div class="loader"></div>
+          <p ng-repeat="m in $ctrl.messages">{{m.statusMsg}} {{m.endpoint}}...
+            <span ng-class="m.status">{{m.status}}</span>
+          </p>
+        </div>
+      </div>
+    </script>
+  </div>
