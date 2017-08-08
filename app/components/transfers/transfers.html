@@ -8,12 +8,15 @@
         </thead>
         <tbody>
           <tr ng-repeat="hash in vm.hashes">
-            <td width="30%">{{hash.timestamp}}</td>
+            <td width="30%">{{hash.meta.timestamp}}</td>
             <td width="35%">{{hash.hash}}</td>
-            <td width="35%">{{hash.path}}</td>
+            <td width="35%">{{hash.meta.path}}</td>
           </tr>
         </tbody>
       </table>
+      <div class="no-content" ng-show="vm.hashes.length == 0">
+        You don't have any stored hashes on swarm stored in this app just yet.
+      </div>
   </div>
   <div class="middle-pane">
   </div>

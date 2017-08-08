@@ -10,18 +10,21 @@
   </head>
   <body ng-app='swarmapp'>
     <header>
+      <div class="apptitle">Swarmbox 0.1.1</div>
     </header>
     <content>
       <menu>
-        <div class="main-menu-item selected" ui-sref="files">
+        <div class="main-menu-item" ui-sref-active="selected" ui-sref="files">
           <span>Files</span>
         </div>
-        <div class="main-menu-item" ui-sref="transfers">
+        <div class="main-menu-item" ui-sref-active="selected" ui-sref="transfers">
           <span>Transfers</span>
         </div>
+<!--
         <div class="main-menu-item">
           <span>Configuration</span>
         </div>
+-->
       </menu>
       <div ui-view=""></div>
     </content>

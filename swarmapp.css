@@ -16,6 +16,13 @@ header {
   color: whitesmoke;
 }
 
+.apptitle {
+  text-align: center;
+  font-size: 26px;
+  line-height: 40px;
+  color: #34a6ff;
+}
+
 content {
   background-color: #32363f;
   display: block;
@@ -36,7 +43,8 @@ menu {
 }
 
 .main-menu-item {
-  width: 30%;
+  /*width: 30%;*/
+  width: 50%;
   height: 100px;
   display: inline-block;
   border: 1px solid #34a6ff;
@@ -44,6 +52,7 @@ menu {
   line-height: 100px;
   text-align: center;
   cursor: pointer;
+  font-size: 20px;
 }
 
 .main-menu-item:hover {
@@ -289,3 +298,11 @@ hr {
   margin-right: 10px;
 }
 
+.no-content {
+  height: 100px;
+  width: 100%;
+  font-size: 16px;
+  line-height: 100px;
+  text-align: center;
+  color: white;
+}

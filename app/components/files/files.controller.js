@@ -7,9 +7,9 @@ const HASH_LENGTH = 64;
 var tar = require('tar-fs');
 var request = require('request');
 
-FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash'];
+FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory'];
 
-function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash) {
+function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory) {
 
   var uploadHereDefault     = "Drag files here to upload to Swarm";
 
@@ -23,7 +23,6 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
 
   readFolder(getOsHome());
 
-  var swarmbox  = document.getElementById('swarmbox');
   var uploadbox = document.getElementById('uploadbox');
 
   uploadbox.ondragover = () => {
@@ -45,27 +44,10 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
     $scope.uploadHere = "";
     document.getElementById('uploadbox').style.background = 'url("img/loader.gif") no-repeat center';
     document.getElementById('uploadbox').style["background-size"] = "50px";
-    uploadToSwarm($http, ErrorService, isDir, path);
+    $scope.uploadToSwarm(isDir, path);
   };
 
-  swarmbox.ondragover = () => {
-    return false;
-  };
-
-  swarmbox.ondragleave = () => {
-    return false;
-  };
-
-  swarmbox.ondragend = () => {
-    return false;
-  };
-
-  swarmbox.ondrop = (e) => {
-   
-    let pathObj   = evalPath(e);
-    let isDir     = pathObj.isDir;
-    let path      = pathObj.path;
-
+  $scope.dropFromSwarmboxFolder = (destFolder, path, isDir) => {
     SwarmboxHash.getLastHash(StartState.isStarted(), function(err, h) {
       if (err) {
         console.log("Error looking up last hash for Swarmbox");
@@ -73,9 +55,53 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       }
       if (!h) {
         console.log("Swarmbox root hash is not defined. Can't connect to swarmbox. Aborting");
+        ErrorService.showError("Can't complete upload request, Swarm hash is not defined. Has the setup process been completed?");
         return;
       }
-      updateSwarmbox($http, path, isDir, h);
+
+      var downloadHash = function(p) {
+        $http.get(ENDPOINT + "/bzz:/" + h + "/" + p).then(
+          function(r) {
+            if (r.data && r.data.entries && r.data.entries.length > 0) {
+              //downloading directory
+              let dirname = current_local_path + "/" + p;
+              fs.mkdirSync(dirname);
+              for (let k=0; k<r.data.entries.length; k++) {
+                if (r.data.entries[k].path == "" || r.data.entries[k].path == ".") {
+                  continue;
+                }
+                downloadHash(p + "/" + r.data.entries[k].path);
+              }
+              
+            } else {
+              //downloading single file
+              fs.createReadStream(r.data).pipe(fs.createWriteStream(current_local_path + "/" + p));
+            }
+            readFolder(current_local_path);
+          },
+          function(e) {
+            console.log("Download from Swarmbox failed");
+            console.log(e);
+          }
+        );
+      }
+
+      downloadHash(path);
+    });
+  };
+
+  $scope.dropToSwarmboxFolder = (destFolder, path, isDir) => {
+    SwarmboxHash.getLastHash(StartState.isStarted(), function(err, h) {
+      if (err) {
+        console.log("Error looking up last hash for Swarmbox");
+        return
+      }
+      if (!h) {
+        console.log("Swarmbox root hash is not defined. Can't connect to swarmbox. Aborting");
+        ErrorService.showError("Can't complete upload request, Swarm hash is not defined. Has the setup process been completed?");
+        return;
+      }
+      $scope.updateSwarmbox(path, isDir, h, destFolder);
       return false;
     });
   };
@@ -84,6 +110,135 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
     $scope.curr_dirs          = [];
     $scope.curr_files         = [];
     getDir($scope, $http, id);
+  }
+
+  $scope.addToHashes = function(resultHash, lastpath) {
+    HashHistory.addHash(resultHash, {timestamp: new Date(), hash: lastoutput, path: lastpath});
+    PubSub.publish("hashHistory", "updated"); 
+    let parent = angular.element(document.querySelector('#upload-result'));
+    $scope.uploadHere = uploadHereDefault;
+    parent.html("");
+
+  }
+
+  $scope.uploadToSwarm = function(isDir, path) {
+    fs.stat(path,(err,stats) => {
+      if (err) {
+          console.log("ERROR: Selected a path to upload which could not be found on your HD!")
+          return;
+      }
+
+      var buf = null;
+      if (isDir) {
+        var url = ENDPOINT + "/bzz:/";
+        tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "POST", url:url}, function(err, response, body) {
+          if (err) {
+            document.getElementById('uploadbox').style.background = 'none';
+            ErrorService.showError("Error uploading directory to swarm");
+            return console.log(err);
+          }
+          console.log(response.statusCode);
+          $scope.successUpload(body, path);
+        }));
+      } else {
+        buf = fs.readFileSync(path);
+        $http.post(ENDPOINT + "/bzz:/", buf).then(
+          function(r) {
+            $scope.successUpload(r.data, path); 
+          },
+          function(e) {
+            document.getElementById('uploadbox').style.background = 'none';
+            ErrorService.showError("Unfortunately, your upload failed!");
+            console.log(e);
+          }
+        );
+      }
+    });
+  }
+
+  $scope.successUpload = function(resultHash, path) {
+    document.getElementById('uploadbox').style.background = 'none';
+    document.getElementById('upload-result').style.display = 'block';
+    let html = "<div class='inline results-title'>Upload successful!<br/>Swarm returned this hash for your upload:<br/><br/><span class='results-content'>" + resultHash + "</span></div>";
+    html += "<div class='inline results-actions'><button type='button' class='btn-normal' ng-click='addToHashes(\"" + resultHash +"\",\"" + path + "\")' class='action'>Add To My Hashes</button></div>";
+    let parent = angular.element(document.querySelector('#upload-result'));
+    let generated = parent.html(html)
+    $compile(generated.contents())($scope)
+  }
+
+  $scope.updateSwarmbox = (path, isDir, h, destFolder ) => {
+    fs.stat(path,(err,stats) => {
+      if (err) {
+          ErrorService.showError("Selected a path to upload which could not be found on your HD!")
+          return;
+      }
+      
+      var buf = null;
+      isDir = (isDir == true);
+      if (isDir) {
+        //TODO: paths work only for POSIX!!!
+        var dirname = path.substr(path.lastIndexOf("/") +1);
+        console.log(dirname);
+        var url = ENDPOINT + "/bzz:/" + h + "/" + destFolder + dirname;
+        console.log(url);
+        tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "PUT", url:url}, function(err, response, body) {
+          if (err) {
+            console.log("EERRROR");
+            console.log(err);
+          }
+          console.log(response.statusCode);
+          console.log("Successfully updated swarmbox, new hash is: " + body);
+          $scope.refreshSwarmbox(body);
+        })
+      );
+      } else {
+        buf = fs.readFileSync(path);
+        if (!buf) {
+          console.log("Buffer for update is empty, something went wrong. Aborting");
+          ErrorService.showError("Upload failed; is this a valid file?");
+          return;
+        }
+
+        var filename = path.substr(path.lastIndexOf("/") +1);
+        console.log(filename);
+        var url = ENDPOINT + "/bzz:/" + h + "/" + filename;
+        console.log(url);
+        $http.put(url, buf).then(
+          function(r) {
+            console.log("file successfully uploaded");
+            $scope.refreshSwarmbox(r.data);
+          },
+          function(e) {
+            document.getElementById('uploadbox').style.background = 'none';
+            ErrorService.showError("Unfortunately, your upload failed!");
+            console.log(e);
+          }
+        );
+      }
+    });
+  }
+
+  $scope.refreshSwarmbox = (newhash) => {
+    $scope.curr_dirs =  [];
+    $scope.curr_files = [];
+    connectToSwarmbox($http, newhash, PubSub, $uibModal, function(err, manifest) {
+      if (err) {
+        console.log("Error connecting to swarmbox");
+        console.log(err);
+        return
+      }
+      $scope.swarmboxHash = newhash;
+      SwarmboxHash.setLastHash($scope.swarmboxHash, function(err) {
+          if (err) {
+            console.log("error setting last hash");
+            console.log(err);
+            return
+          }
+          $scope.curr_manifest = manifest;
+          processManifest($scope, manifest, true);
+        });
+    }); 
+
   }
 
   $scope.openHashDialog = function() {
@@ -141,6 +296,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       }); 
     };
   });
+
 }
 
 function evalPath(e) {
@@ -167,39 +323,6 @@ function evalPath(e) {
   return {path: path, isDir: isDir};
 }
 
-function updateSwarmbox($http, path, isDir, h) {
-
-  fs.stat(path,(err,stats) => {
-    if (err) {
-        ErrorService.showError("Selected a path to upload which could not be found on your HD!")
-        return;
-    }
-    
-    var buf = null;
-    if (isDir) {
-      //TODO: dest folder hardcoded!!!
-      var url = ENDPOINT + "/bzz:/" + h + "/docs/";
-      console.log(url);
-      tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "PUT", url:url}, function(err, response, body) {
-        if (err) {
-          console.log("EERRROR");
-          console.log(err);
-        }
-        console.log(response.statusCode);
-        console.log(body);
-      })
-    );
-    } else {
-      buf = readFileSync(path);
-    }
-    
-    if (!buf) {
-      console.log("Buffer for update is empty, something went wrong. Aborting");
-      return;
-    }
-
-  });
-}
 
 function getTar(path) {
   tar.pack(path);
@@ -310,47 +433,6 @@ function getDir($scope, $http, id) {
   }
 }
 
-function uploadToSwarm($http, ErrorService, isDir, path) {
-  fs.stat(path,(err,stats) => {
-    if (err) {
-        console.log("ERROR: Selected a path to upload which could not be found on your HD!")
-        return;
-    }
-
-    var buf = null;
-    if (isDir) {
-      var url = ENDPOINT + "/bzz:/";
-      tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "POST", url:url}, function(err, response, body) {
-        if (err) {
-          document.getElementById('uploadbox').style.background = 'none';
-          ErrorService.showError("Error uploading directory to swarm");
-          return console.log(err);
-        }
-        console.log(response.statusCode);
-        successUpload(body, path);
-      }));
-    } else {
-      buf = fs.readFileSync(path);
-      $http.post(ENDPOINT + "/bzz:/", buf).then(
-        function(r) {
-          successUpload(r.data, path); 
-        },
-        function(e) {
-          document.getElementById('uploadbox').style.background = 'none';
-          ErrorService.showError("Unfortunately, your upload failed!");
-          console.log(e);
-        }
-      );
-    }
-  });
-}
-
-function successUpload(resultHash, path) {
-  document.getElementById('uploadbox').style.background = 'none';
-  document.getElementById('upload-result').style.display = 'block';
-  document.getElementById('upload-result').innerHTML = "<div class='inline results-title'>Upload successful!<br/>Swarm returned this hash for your upload:<br/><br/><span class='results-content'>" + resultHash + "</span></div>";
-  document.getElementById('upload-result').innerHTML += "<div class='inline results-actions'><button type='button' class='btn-normal' onclick='addToHashes(\"" + resultHash +"\",\"" + path + "\")' class='action'>Add To My Hashes</button></div>";
-}
 
 module.exports = FilesController;
 

@@ -16,23 +16,24 @@ var hashes = {};
 var lastoutput = "";
 var lastpath = "";
 
-var HASH_FILE = ".swarmbox-hash";
+var HASH_FILE     = ".swarmbox-hash";
+var HASH_HISTORY  = ".swarm-history";
 
+var current_local_path = "";
 
 function execute(command, callback) {
     exec(command, function(error, stdout, stderr){ callback(stdout); });
 };
 
 
-function addToHashes(lastoutput, lastpath) {
-  hashes[lastoutput] = {timestamp: new Date(), hash: lastoutput, path: lastpath};
-}
 
 function readFolder(path) {
     fs.readdir(path, (err, files) => {
         'use strict';
         if (err) throw  err;
 
+        current_local_path = path;
+        console.log(current_local_path);
         //Dynamically add <ol> tags to the div
         document.getElementById('listed-files').innerHTML = `<ol id="display-files"></ol>`;
 
@@ -134,20 +135,13 @@ function persistHash(hash, cb) {
     }
     if (isValidHash(hash)) {
       console.log("valid hash, going to save");
-      var fd = fs.openSync(HASH_FILE, 'a+');
-      var newline = hash + "\n";
-      console.log(newline);
-      fs.write(fd, newline, 0, function(err, written, str) {
-        if (err) {
-          console.log("Error persisting hash to file!");
-          throw err;
-        }
-        console.log("Successully persisted new hash to file");
-        console.log(written);
-        console.log(str);
-        fs.closeSync(fd);
-        cb(null);    
-      });
+      var current = fs.readFileSync(HASH_FILE);
+      var fd = fs.openSync(HASH_FILE, 'w+');
+      var buffer = new Buffer(hash + "\n");
+      fs.writeSync(fd, buffer, 0, buffer.length, 0);
+      fs.writeSync(fd, current, 0, current.length, buffer.length);
+      fs.closeSync(fd);
+      cb(null);    
     } else {
       console.log("invalid hash, not saving");
     }

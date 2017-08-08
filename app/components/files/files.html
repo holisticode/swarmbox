@@ -15,14 +15,14 @@
         <div id="os-root" class="shortcut" onclick="readFolder(getOsRoot());"><i class="fa fa-anchor" aria-hidden="true"></i> Root</div> 
         <div id="os-home" class="shortcut" onclick="readFolder(getOsHome())"><i class="fa fa-home" aria-hidden="true"></i> Home</div>
       </div>
-      <div id="listed-files"></div>
+      <div ngdroppable drop="dropFromSwarmboxFolder" id="listed-files"></div>
     </div>
 
     <div class="middle-pane"></div>
 
-    <div class="content-pane" id="swarmbox">
+    <div class="content-pane" id="swarmbox" ngdroppable drop="dropToSwarmboxFolder">
       <ol id='swarmbox-files'> 
-        <li class="dir" ng-repeat-start="d in curr_dirs"  draggable="true" ondragstart="itemDrag(event)" type="dir"  id="{{d}}" ng-dblclick="openItem(d)"><i class="fa fa-folder-open"></i>{{d}}</li>
+        <li class="dir" ng-repeat-start="d in curr_dirs" ngdroppable drop="dropToSwarmboxFolder" draggable="true" ondragstart="itemDrag(event)" dir="dir" type="dir" id="{{d}}" ng-dblclick="openItem(d)"><i class="fa fa-folder-open"></i>{{d}}</li>
         <hr ng-repeat-end>
         <li class="file" ng-repeat-start="f in curr_files" draggable="true" ondragstart="itemDrag(event)" type="file" id="{{f.path}}" ng-dblclick="downloadFile(f)"><i class="fa fa-file"></i>{{f.path}}</li>
         <hr ng-repeat-end>
