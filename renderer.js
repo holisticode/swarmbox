@@ -52,7 +52,7 @@ function readFolder(path) {
         }
  
 
-        let last = path.lastIndexOf("/");
+        let last = path.lastIndexOf(pathlib.sep);
         let parent = null;
         if (last > 0) {
           parent = path.substr(0,last);
@@ -137,7 +137,7 @@ function persistHash(hash, cb) {
       console.log("valid hash, going to save");
       var current = fs.readFileSync(HASH_FILE);
       var fd = fs.openSync(HASH_FILE, 'w+');
-      var buffer = new Buffer(hash + "\n");
+      var buffer = new Buffer(hash + os.EOL);
       fs.writeSync(fd, buffer, 0, buffer.length, 0);
       fs.writeSync(fd, current, 0, current.length, buffer.length);
       fs.closeSync(fd);
@@ -163,7 +163,7 @@ function readFirstLine(path, cb) {
     var index;
     rs
       .on('data', function (chunk) {
-        index = chunk.indexOf('\n');
+        index = chunk.indexOf(os.EOL);
         acc += chunk;
         index !== -1 ? rs.close() : pos += chunk.length;
       })

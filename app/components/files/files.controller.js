@@ -6,6 +6,7 @@ const HASH_LENGTH = 64;
 
 var tar = require('tar-fs');
 var request = require('request');
+var nodejspath = require("path");
 
 FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory'];
 
@@ -64,7 +65,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
           function(r) {
             if (r.data && r.data.entries && r.data.entries.length > 0) {
               //downloading directory
-              let dirname = current_local_path + "/" + p;
+              let dirname = nodejspath.join(current_local_path, p);
               fs.mkdirSync(dirname);
               for (let k=0; k<r.data.entries.length; k++) {
                 if (r.data.entries[k].path == "" || r.data.entries[k].path == ".") {
@@ -75,7 +76,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
               
             } else {
               //downloading single file
-              fs.createReadStream(r.data).pipe(fs.createWriteStream(current_local_path + "/" + p));
+              fs.createReadStream(r.data).pipe(fs.createWriteStream(nodejspath.join(current_local_path , p)));
             }
             readFolder(current_local_path);
           },
@@ -176,8 +177,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       var buf = null;
       isDir = (isDir == true);
       if (isDir) {
-        //TODO: paths work only for POSIX!!!
-        var dirname = path.substr(path.lastIndexOf("/") +1);
+        var dirname = path.substr(path.lastIndexOf(nodejspath.sep) +1);
         console.log(dirname);
         var url = ENDPOINT + "/bzz:/" + h + "/" + destFolder + dirname;
         console.log(url);
@@ -199,7 +199,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
           return;
         }
 
-        var filename = path.substr(path.lastIndexOf("/") +1);
+        var filename = path.substr(path.lastIndexOf(nodejspath.sep) +1);
         console.log(filename);
         var url = ENDPOINT + "/bzz:/" + h + "/" + filename;
         console.log(url);
@@ -401,16 +401,16 @@ function getDir($scope, $http, id) {
     let url = ""; 
     if (id == "../") {
       let path = $scope.curr_dir;
-      if (path.lastIndexOf("/") == path.length - 1) {
+      if (path.lastIndexOf(nodejspath.sep) == path.length - 1) {
         path = path.slice(0, -1);
       }
-      let idx = path.lastIndexOf("/");
+      let idx = path.lastIndexOf(nodejspath.sep);
       if (idx) {
-        path = path.substring(0,path.lastIndexOf("/"));  
+        path = path.substring(0,path.lastIndexOf(nodejspath.sep));  
         $scope.curr_dir = path; 
       } else {
         path = "";
-        $scope.curr_dir = "/"; 
+        $scope.curr_dir = getOsRoot(); 
         isRoot = true;
       }
       url = ENDPOINT + "/bzz:/" + $scope.swarmboxHash + "/" + path + "?list=true";
