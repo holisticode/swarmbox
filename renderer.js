@@ -18,13 +18,16 @@ var lastpath = "";
 
 var HASH_FILE     = ".swarmbox-hash";
 var HASH_HISTORY  = ".swarm-history";
+const HASH_LENGTH = 64;
+
+var ENDPOINT = "http://localhost:8500";
+var GATEWAY = "http://swarm-gateways.net";
 
 var current_local_path = "";
 
 function execute(command, callback) {
     exec(command, function(error, stdout, stderr){ callback(stdout); });
 };
-
 
 
 function readFolder(path) {

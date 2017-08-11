@@ -42,6 +42,82 @@
     }
   });
 
+  ngapp.factory('Swarmbox',function($http,PubSub,$uibModal){
+    return{
+        connect: function(hash, cb){
+          var modalInst = $uibModal.open({
+              animation: true,
+              component: 'loadingSwarmboxComponent'
+          });
+          modalInst.rendered.then(
+            function(d) {
+              console.log("Connecting to swarm box...");
+              PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "connecting"});
+              if (!hash || hash.length != HASH_LENGTH) {
+                console.log("Invalid hash provided, unable to connecto to Swarmbox. Aborting.");
+                return;
+              }
+              $http.get(ENDPOINT + "/bzz:/" + hash + "/?list=true").then(
+                function(d) {
+                  console.log("Successfully retrieved manifest for user's swarmbox");
+                  PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "ok"});
+                  modalInst.close();
+                  cb(null, d.data);
+                },
+                function(e) {
+                  console.log(e);
+                  console.log("Error connecting to Swarmbox. Trying failover on gateway");
+                  PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "failed"});
+                  PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "connecting"});
+                  $http.get(GATEWAY+ "/bzz:/" + hash + "/?list=true").then(
+                    function(d) {
+                      console.log("Successfully retrieved manifest for user's swarmbox");
+                      PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "ok"});
+                      modalInst.close();
+                      ENDPOINT = GATEWAY;
+                      cb(null, d.data);
+                    },
+                    function(e) {
+                      console.log(e);
+                      console.log("Gateway cnnection failed as well. Giving up");
+                      PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "failed"});
+                      modalInst.close();
+                      cb(e, null);
+                    }
+                  );
+                }
+              );
+            }
+          );
+        },
+
+        upload: function(path, cb) {
+          fs.stat(path,(err,stats) => {
+            if (err) {
+                console.log("ERROR: Selected a path to upload which could not be found on your HD!")
+                return cb(err);
+            }
+            var url = ENDPOINT + "/bzz:/";
+            request(url, function(error,response,body) {
+              if (error || response != 200) {
+                url = GATEWAY + "/bzz:/";
+              }
+              tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "POST", url:url}, function(err, response, body) {
+                  if (err) {
+                    document.getElementById('uploadbox').style.background = 'none';
+                    ErrorService.showError("Error uploading directory to swarm");
+                    return cb(err);
+                  }
+                  console.log(response.statusCode);
+                  cb(null, body);
+              }));
+            });
+          });
+
+        }
+    }
+  });
+
   ngapp.factory('StartState',function(){
     var isStarted = false;
     return{
@@ -76,19 +152,23 @@
     return {
         getLastHash: function(isStarted, cb) {
             if (isStarted) {
-              console.log("is stared, thus returning form cache");
+              console.log("is started, thus returning form cache");
               cb(null, lastHash);
             } else {
-              console.log("is not stared, reading file");
-              readFirstLine(HASH_FILE , function(err, existingHash) {
-                if (err) {
-                  console.log("Error reading last hash");
-                  return console.log(err);
-                }
-                console.log(existingHash);
-                lastHash = existingHash;              
-                cb(err, existingHash);
-              });
+              console.log("is not started, reading file");
+              if (fs.existsSync(HASH_FILE)) {
+                readFirstLine(HASH_FILE , function(err, existingHash) {
+                  if (err) {
+                    console.log("Error reading last hash");
+                    return console.log(err);
+                  }
+                  console.log(existingHash);
+                  lastHash = existingHash;              
+                  cb(err, existingHash);
+                });
+              } else {
+                cb(null,lastHash);
+              }
             }
         },
 

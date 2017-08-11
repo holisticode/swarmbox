@@ -62,6 +62,10 @@
               <button class="btn btn-primary yesno yes" type="submit" ng-click="$ctrl.confirmFolder()">Yes</button>
               <button class="btn btn-primary yesno no" type="submit" ng-click="$ctrl.dontUseFolder()">No</button>
             </div>
+            <div class="uploadSpinner" ng-show="$ctrl.uploadingFolder">
+              <h4>Uploading your folder to swarm...</h4>
+              <div class="loader"></div>
+            </div>
           </div>
         </div>
 

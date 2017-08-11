@@ -8,9 +8,11 @@ var tar = require('tar-fs');
 var request = require('request');
 var nodejspath = require("path");
 
-FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory'];
+var swarmurl = ENDPOINT;
 
-function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory) {
+FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory', 'Swarmbox'];
+
+function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory, Swarmbox) {
 
   var uploadHereDefault     = "Drag files here to upload to Swarm";
 
@@ -61,7 +63,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       }
 
       var downloadHash = function(p) {
-        $http.get(ENDPOINT + "/bzz:/" + h + "/" + p).then(
+        $http.get(swarmurl + "/bzz:/" + h + "/" + p).then(
           function(r) {
             if (r.data && r.data.entries && r.data.entries.length > 0) {
               //downloading directory
@@ -131,7 +133,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
 
       var buf = null;
       if (isDir) {
-        var url = ENDPOINT + "/bzz:/";
+        var url = swarmurl + "/bzz:/";
         tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "POST", url:url}, function(err, response, body) {
           if (err) {
             document.getElementById('uploadbox').style.background = 'none';
@@ -143,7 +145,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
         }));
       } else {
         buf = fs.readFileSync(path);
-        $http.post(ENDPOINT + "/bzz:/", buf).then(
+        $http.post(swarmurl + "/bzz:/", buf).then(
           function(r) {
             $scope.successUpload(r.data, path); 
           },
@@ -179,7 +181,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       if (isDir) {
         var dirname = path.substr(path.lastIndexOf(nodejspath.sep) +1);
         console.log(dirname);
-        var url = ENDPOINT + "/bzz:/" + h + "/" + destFolder + dirname;
+        var url = swarmurl + "/bzz:/" + h + "/" + destFolder + dirname;
         console.log(url);
         tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "PUT", url:url}, function(err, response, body) {
           if (err) {
@@ -201,7 +203,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
 
         var filename = path.substr(path.lastIndexOf(nodejspath.sep) +1);
         console.log(filename);
-        var url = ENDPOINT + "/bzz:/" + h + "/" + filename;
+        var url = swarmurl + "/bzz:/" + h + "/" + filename;
         console.log(url);
         $http.put(url, buf).then(
           function(r) {
@@ -221,7 +223,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
   $scope.refreshSwarmbox = (newhash) => {
     $scope.curr_dirs =  [];
     $scope.curr_files = [];
-    connectToSwarmbox($http, newhash, PubSub, $uibModal, function(err, manifest) {
+    Swarmbox.connect(newhash, function(err, manifest) {
       if (err) {
         console.log("Error connecting to swarmbox");
         console.log(err);
@@ -258,7 +260,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
         console.log("invalid hash, returning");
         return;
       }
-      connectToSwarmbox($http, hash, PubSub, $uibModal, function(err, manifest) {
+      Swarmbox.connect(hash, function(err, manifest) {
         if (err) {
           console.log("Error connecting to swarmbox");
           console.log(err);
@@ -286,7 +288,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
     if (!isStarted && !hash) {
       $scope.openHashDialog();
     } else if (hash) {
-      connectToSwarmbox($http, hash, PubSub, $uibModal, function(err, manifest) {
+      Swarmbox.connect(hash, function(err, manifest) {
         if (err) {
           ErrorService.showError("Failed to connect to Swarmbox. Do you have internet connection?");
           return;
@@ -328,53 +330,6 @@ function getTar(path) {
   tar.pack(path);
 }
 
-function connectToSwarmbox($http, hash, PubSub, $uibModal, cb) {
-  var modalInst = $uibModal.open({
-      animation: true,
-      component: 'loadingSwarmboxComponent'
-  });
-  modalInst.rendered.then(
-    function(d) {
-      console.log("Connecting to swarm box...");
-      PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "connecting"});
-      if (!hash || hash.length != HASH_LENGTH) {
-        console.log("Invalid hash provided, unable to connecto to Swarmbox. Aborting.");
-        return;
-      }
-      $http.get(ENDPOINT + "/bzz:/" + hash + "/?list=true").then(
-        function(d) {
-          console.log("Successfully retrieved manifest for user's swarmbox");
-          PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "ok"});
-          modalInst.close();
-          cb(null, d.data);
-        },
-        function(e) {
-          console.log(e);
-          console.log("Error connecting to Swarmbox. Trying failover on gateway");
-          PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "failed"});
-          PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "connecting"});
-          $http.get(GATEWAY+ "/bzz:/" + hash + "/?list=true").then(
-            function(d) {
-              console.log("Successfully retrieved manifest for user's swarmbox");
-              PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "ok"});
-              modalInst.close();
-              ENDPOINT = GATEWAY;
-              cb(null, d.data);
-            },
-            function(e) {
-              console.log(e);
-              console.log("Gateway cnnection failed as well. Giving up");
-              PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "failed"});
-              modalInst.close();
-              cb(e, null);
-            }
-          );
-        }
-      );
-    }
-  );
-}
-
 function processManifest($scope, mf, isRoot) {
   if (mf) {
     if (!isRoot) {
@@ -413,9 +368,9 @@ function getDir($scope, $http, id) {
         $scope.curr_dir = getOsRoot(); 
         isRoot = true;
       }
-      url = ENDPOINT + "/bzz:/" + $scope.swarmboxHash + "/" + path + "?list=true";
+      url = swarmurl + "/bzz:/" + $scope.swarmboxHash + "/" + path + "?list=true";
     } else { 
-      url = ENDPOINT + "/bzz:/" + $scope.swarmboxHash + "/" + id + "?list=true";
+      url = swarmurl + "/bzz:/" + $scope.swarmboxHash + "/" + id + "?list=true";
       $scope.curr_dir = $scope.curr_dir + id; 
     } 
     if (url) {

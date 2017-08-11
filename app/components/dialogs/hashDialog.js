@@ -5,7 +5,7 @@ angular.module('swarmapp').component('hashModalComponent', {
     close: '&',
     dismiss: '&'
   },
-  controller: function () {
+  controller: function (Swarmbox, SwarmboxHash, $state) {
     var $ctrl = this;
 
     $ctrl.currentDialogTitle = "Do you already have a Swarmbox configured?";
@@ -13,6 +13,7 @@ angular.module('swarmapp').component('hashModalComponent', {
     $ctrl.hasBox = false;
     $ctrl.hasBoxShown = false;
     $ctrl.swarmboxFolder = false;
+    $ctrl.uploadingFolder = false;
 
     $ctrl.$onInit = function () {
       //$ctrl.hash = $ctrl.resolve.hash;
@@ -31,17 +32,27 @@ angular.module('swarmapp').component('hashModalComponent', {
 
     $ctrl.confirmFolder = function () {
       $ctrl.hasBoxShown = true;
-      $ctrl.close();
       if (!$ctrl.swarmboxFolder) {
+        $ctrl.close();
         return console.log("Invalid swarmboxFolder");
       }
+      $ctrl.uploadingFolder = true; 
       
       fs.stat($ctrl.swarmboxFolder,(err,stats) => {
         if (err) {
+          $ctrl.close();
           return console.log("Provided swarmboxFolder does not exist or is invalid.");
         }
         console.log("Uploading folder to swarm...");
-        uploadToSwarm($ctrl.swarmboxFolder);
+        Swarmbox.upload($ctrl.swarmboxFolder, function(err, hash){
+          $ctrl.uploadingFolder = false; 
+          $ctrl.close();
+          if (err) return;
+          SwarmboxHash.setLastHash(hash, function(err) {
+            if (err) return;
+            $state.reload();
+          });
+        });
       });
     };
 
