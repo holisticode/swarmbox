@@ -107,7 +107,7 @@ menu {
 .content-pane {
   width: 45%;
   height: 60vh;
-  display: inline-block;
+  display: flex;
   border: 1px solid #34a6ff;
   padding: 20px;
   color: #f6eeee;
@@ -126,7 +126,7 @@ menu {
 
 #listed-files {
   display: inline-block;
-  width: 74%;
+  /*width: 74%;*/
   height: 100%;
   overflow-x: hidden ;
 } 
@@ -305,4 +305,8 @@ hr {
   line-height: 100px;
   text-align: center;
   color: white;
+}
+
+.ng-invalid {
+  border-color: red !important;
 }

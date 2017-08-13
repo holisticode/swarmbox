@@ -12,6 +12,7 @@
     "decentralized",
     "storage",
     "content",
+    "tar-fs",
     "web3"
   ],
   "author": "Ethersphere",

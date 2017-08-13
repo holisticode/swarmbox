@@ -70,9 +70,9 @@
         </div>
 
         <div class="insertHash" ng-show="$ctrl.hasBoxShown && $ctrl.hasBox && !$ctrl.selectFolder">
-          <input type="text" placeholder="Your (last) SwarmboxHash here" name="swarmboxHash" ng-model="$ctrl.swarmHash" ng-required ng-min-length="64" ng-max-length="64">
+          <input type="text" placeholder="Your (last) SwarmboxHash here" name="swarmboxHash" ng-model="$ctrl.swarmHash" ng-required>
           <br/>
-          <button class="btn btn-primary" type="submit" ng-click="$ctrl.ok()">Connect to your Swarmbox</button>
+          <button class="btn btn-primary" type="submit" ng-click="$ctrl.ok()" ng-disabled="!$ctrl.isValidId()">Connect to your Swarmbox</button>
         </div>
       </div>
     </script>

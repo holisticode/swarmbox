@@ -8,7 +8,9 @@ const fs = require('fs');
 /** * We create an object from electron module. The shell object allows us to open the selected file */ 
 const {shell} = require('electron');
 const os = require('os');
+const tar     = require('tar-fs');
 const pathlib = require('path');
+const request = require('request');
 
 var exec = require('child_process').exec;
 
@@ -136,7 +138,7 @@ function persistHash(hash, cb) {
       console.log("Old hash is same as new; not persisting.");
       return;
     }
-    if (isValidHash(hash)) {
+    if (isValidSwarmboxId(hash)) {
       console.log("valid hash, going to save");
       var current = fs.readFileSync(HASH_FILE);
       var fd = fs.openSync(HASH_FILE, 'w+');
@@ -177,3 +179,8 @@ function readFirstLine(path, cb) {
         cb(err,null);
       })
 }
+
+function isValidSwarmboxId(id)  {
+  return id.length == 64 || id.substr(id.length -4) == ".eth" || id.substr(id.length -5) == ".test"
+}
+

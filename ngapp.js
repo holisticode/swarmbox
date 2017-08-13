@@ -42,7 +42,7 @@
     }
   });
 
-  ngapp.factory('Swarmbox',function($http,PubSub,$uibModal){
+  ngapp.factory('Swarmbox',function($http,PubSub,$uibModal,ErrorService){
     return{
         connect: function(hash, cb){
           var modalInst = $uibModal.open({
@@ -53,7 +53,7 @@
             function(d) {
               console.log("Connecting to swarm box...");
               PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "connecting"});
-              if (!hash || hash.length != HASH_LENGTH) {
+              if (!hash || !validSwarmboxId()) {
                 console.log("Invalid hash provided, unable to connecto to Swarmbox. Aborting.");
                 return;
               }
@@ -82,6 +82,7 @@
                       console.log("Gateway cnnection failed as well. Giving up");
                       PubSub.publish("loadingSwarmbox", {endpoint: GATEWAY, status: "failed"});
                       modalInst.close();
+                      ErrorService.showError("Could not connect to you Swarmbox. Check your internet connection?");
                       cb(e, null);
                     }
                   );

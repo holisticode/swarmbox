@@ -52,9 +52,38 @@ If it isn't, follow installation instructions for nodejs for your platform at [h
 * cd swarmbox
 * npm install
 * npm install -g electron
+* npm install -g bower
+* bower install
 
 The above should allow you to install all required modules.
 To start the application then enter the directory where you cloned the repo, e.g. `/home/youruser/swarmbox`, and execute `electron .` (the dot at the end is required).
 
 Please consider Swarmbox to be experimental for the time being, as is it's underlying technology, Swarm.
 Expect bugs and problems to occur. You may use the issues system of this github repo to provide bug reports or suggest changes.
+
+## Usage ##
+The app will first ask the user to indicate if she already has a Swarmbox hash from any earlier upload.
+If the user has this hash, it should be provdied. The app will try to connect to Swarm and download the existing swarmbox.
+This will then be shown in the right-hand sidepane. 
+On the left-hand sidepane, the local filesystem browser is displayed.
+
+If the user doesn't have an existing swarmbox, the app prompts the user to browse for a directory on the local filesystem,
+inviting the user to upload the chosen directory. If the user chooses a directory for upload, the app will use that one
+as the swarmbox directory.
+
+The user can drag files from the left-hand sidepane (local filesystem) to the right-hand sidepane (swarmbox).
+This will upload the new file(s) or directory to the user's swarmbox.
+Note that this changes the root hash for the user's swarmbox. The app maintains a history of the user's swarmbox hashes
+in the `.swarmbox-hash` file. The first line in this file represents the latest hash of the user's swarmbox.
+Please read the Swarm documentation to understand what these hashes are and how Swarm handles them.
+
+The user can also drag files from the swarmbox onto her local filesystem on the left-hand sisepane.
+
+Finally, the user can also drag files and directories onto swarm, but outside of her personal swarmbox.
+In order to do so, the user can drag a file from the left-hand sidepane, the filebrowser, onto the 
+bottom left-hand pane ("Drag files here to upload to swarm"). This would upload files to swarm
+which are independently available. Such an upload will return a hash, which represents the key to find the resource again.
+The user can choose to save this key to her local list of hashes by hitting the "Add To My Hashes" button after upload.
+This will save the hash in the personal list, which can be visualized in the tab "Transfers".
+
+The list of transfer hashes is saved locally on disk in the `.swarm-history` file as a JSON object.

@@ -19,6 +19,10 @@ angular.module('swarmapp').component('hashModalComponent', {
       //$ctrl.hash = $ctrl.resolve.hash;
     };
 
+    $ctrl.isValidId = function() {
+      return isValidSwarmboxId($ctrl.swarmHash);
+    }
+  
     $ctrl.has = function () {
       $ctrl.hasBoxShown = true;
       $ctrl.hasBox = true;
