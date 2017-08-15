@@ -177,7 +177,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       }
       
       var buf = null;
-      isDir = (isDir == true);
+      isDir = (isDir == "true");
       if (isDir) {
         var dirname = path.substr(path.lastIndexOf(nodejspath.sep) +1);
         console.log(dirname);
