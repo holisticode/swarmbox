@@ -53,7 +53,7 @@
             function(d) {
               console.log("Connecting to swarm box...");
               PubSub.publish("loadingSwarmbox", {endpoint: ENDPOINT, status: "connecting"});
-              if (!hash || !validSwarmboxId()) {
+              if (!hash || !isValidSwarmboxId(hash)) {
                 console.log("Invalid hash provided, unable to connecto to Swarmbox. Aborting.");
                 return;
               }
