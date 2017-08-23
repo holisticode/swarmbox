@@ -10,9 +10,9 @@ var nodejspath = require("path");
 
 var swarmurl = ENDPOINT;
 
-FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory', 'Swarmbox'];
+FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory', 'Swarmbox', 'Endpoint'];
 
-function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory, Swarmbox) {
+function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory, Swarmbox, Endpoint) {
 
   var uploadHereDefault     = "Drag files here to upload to Swarm";
 
@@ -133,7 +133,8 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
 
       var buf = null;
       if (isDir) {
-        var url = swarmurl + "/bzz:/";
+        let url = Endpoint.getValidUrl();
+        url = url + "/bzz:/";
         tar.pack(path).pipe(request({headers: {"Content-Type":"application/x-tar"}, method: "POST", url:url}, function(err, response, body) {
           if (err) {
             document.getElementById('uploadbox').style.background = 'none';
@@ -187,6 +188,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
           if (err) {
             console.log("EERRROR");
             console.log(err);
+            return
           }
           console.log(response.statusCode);
           console.log("Successfully updated swarmbox, new hash is: " + body);
@@ -274,6 +276,7 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
               return
             }
             $scope.curr_manifest = manifest;
+            Swarmbox.setMounted = true;
             processManifest($scope, manifest, true);
           });
       }); 
@@ -283,6 +286,12 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
   };
 
   var isStarted = StartState.isStarted();
+
+  console.log("running controller");
+
+  if (Swarmbox.isMounted()) {
+    return;
+  }
 
   SwarmboxHash.getLastHash(isStarted, function(err, hash) {
     if (!isStarted && !hash) {

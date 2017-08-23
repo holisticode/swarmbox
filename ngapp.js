@@ -8,7 +8,7 @@
   ngapp.config(['$urlRouterProvider', function($urlRouterProvider) {
       $urlRouterProvider.when("", "/");
       $urlRouterProvider.when("/", "/files");
-      //$urlRouterProvider.otherwise("/");
+      $urlRouterProvider.otherwise("/");
   }]);
 
   ngapp.run(['$rootScope', '$state', function($rootScope, $state) {
@@ -42,7 +42,30 @@
     }
   });
 
+  ngapp.factory('Endpoint',function($http){
+    var validUrl = false;
+    return {
+      getValidUrl: function() {
+        if (validUrl) {
+          return validUrl;
+        } else {
+          $http.get(ENDPOINT).then(
+            function(r) {
+              validUrl = ENDPOINT;
+              return validUrl;
+            },
+            function(e) {
+              validUrl = GATEWAY;
+              return validUrl;
+            }
+          );
+        }
+      }
+    }
+  });
+
   ngapp.factory('Swarmbox',function($http,PubSub,$uibModal,ErrorService){
+    var isMounted = false;
     return{
         connect: function(hash, cb){
           var modalInst = $uibModal.open({
@@ -115,7 +138,15 @@
             });
           });
 
-        }
+        },
+
+      isMounted: function() {
+        return isMounted;
+      },
+
+      setMounted: function() {
+          isMounted = true;
+      }
     }
   });
 
@@ -150,6 +181,7 @@
 
   ngapp.factory('SwarmboxHash',function() {
     var lastHash = false;
+    var ens = false;
     return {
         getLastHash: function(isStarted, cb) {
             if (isStarted) {
@@ -174,14 +206,25 @@
         },
 
         setLastHash: function(hash, cb) {
+            var ext = hash.substr(hash.lastIndexOf("."));
+            if (ens) {
+              cb(null);
+            }
             persistHash(hash, function(err) {
               if (err) {
                 throw err;
               }
               lastHash = hash;
+              if (!ens && (ext == ".eth"  || ext == ".test")) {
+                ens = true;
+              }
               cb(null);
             });
         },
+
+        hasEns: function() {
+          return ens;
+        }
     };
   });
 

@@ -60,7 +60,7 @@
             <div class="alert alert-warning" role="alert">The complete content of the folder will be uploaded</div>
             <div class="hasBox">
               <button class="btn btn-primary yesno yes" type="submit" ng-click="$ctrl.confirmFolder()">Yes</button>
-              <button class="btn btn-primary yesno no" type="submit" ng-click="$ctrl.dontUseFolder()">No</button>
+              <button class="btn yesno no" type="submit" ng-click="$ctrl.dontUseFolder()">No</button>
             </div>
             <div class="uploadSpinner" ng-show="$ctrl.uploadingFolder">
               <h4>Uploading your folder to swarm...</h4>
@@ -70,7 +70,7 @@
         </div>
 
         <div class="insertHash" ng-show="$ctrl.hasBoxShown && $ctrl.hasBox && !$ctrl.selectFolder">
-          <input type="text" placeholder="Your (last) SwarmboxHash here" name="swarmboxHash" ng-model="$ctrl.swarmHash" ng-required>
+          <input class="textinput" type="text" placeholder="Your (last) SwarmboxHash here" name="swarmboxHash" ng-model="$ctrl.swarmHash" ng-required>
           <br/>
           <button class="btn btn-primary" type="submit" ng-click="$ctrl.ok()" ng-disabled="!$ctrl.isValidId()">Connect to your Swarmbox</button>
         </div>

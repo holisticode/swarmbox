@@ -67,7 +67,7 @@ menu {
 
 .content-wrapper {
   display: flex;
-  margin-top: 50px;
+  margin-top: 20px;
   width: 100%;
 }
 .app-content {
@@ -126,7 +126,7 @@ menu {
 
 #listed-files {
   display: inline-block;
-  /*width: 74%;*/
+  width: 74%;
   height: 100%;
   overflow-x: hidden ;
 } 
@@ -251,6 +251,9 @@ hr {
 
 .yesno {
   width: 45%;
+  padding: 12px !important;
+  font-weight: bold !important;
+  font-size: 20px !important;
 }
 
 .yes {
@@ -309,4 +312,18 @@ hr {
 
 .ng-invalid {
   border-color: red !important;
+}
+
+.modal-content {
+  background-color: #32363f !important;
+  color: white !important;
+}
+
+.btn-primary {
+  background-color: #34a6ff !important;
+  color: white !important;
+}
+
+.textinput {
+  color: blue;
 }

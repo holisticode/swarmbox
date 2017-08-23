@@ -8,7 +8,8 @@ function FilesRouter($stateProvider) {
             url: '/files',
             templateUrl: 'app/components/files/files.html',
             controller: require('./files.controller'),
-            controllerAs: 'vm'
+            controllerAs: 'vm',
+            reloadOnSearch: false
         })
 }
 
