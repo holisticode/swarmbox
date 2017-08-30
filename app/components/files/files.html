@@ -35,6 +35,24 @@
     <div class="results" id="upload-result">
     </div>
   </div>
+
+  <div class="middle-pane"></div>
+
+  <div class="sync-pane" ng-show="isSwarmboxMounted()">
+    <label class="optionlabel">Download your swarmbox onto your harddrive</label>
+    
+    <div id="syncbox" ng-class="{doSync: syncboxState==true}" ng-click="toggleSync()">
+    </div>
+    <div class="optionpane">
+      <label class="optionlabel">Local folder:</label>
+      <label class="optionvalue">{{localFolder}}</label>
+      <input id="localFolderSelector" type="file" selectfolder="localFolder" webkitdirectory directory ng-hide="true" />
+      <div class="action-info" ng-show="downloadingBox">Downloading contents...
+        <div class="action-detail">This may take a while depending on your swarmbox size.</div>
+        <div class="small loader"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
   <div class="dialog" id="hashModal">

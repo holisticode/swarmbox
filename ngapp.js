@@ -45,18 +45,22 @@
   ngapp.factory('Endpoint',function($http){
     var validUrl = false;
     return {
-      getValidUrl: function() {
+      getValidUrl: function(cb) {
         if (validUrl) {
-          return validUrl;
+          cb(validUrl);
         } else {
-          $http.get(ENDPOINT).then(
+          $http.head(ENDPOINT).then(
             function(r) {
               validUrl = ENDPOINT;
-              return validUrl;
+              cb(validUrl);
             },
             function(e) {
-              validUrl = GATEWAY;
-              return validUrl;
+              if (e.status == 400) {
+                validUrl = ENDPOINT;
+              } else {
+                validUrl = GATEWAY;
+              }
+              cb(validUrl);
             }
           );
         }
@@ -175,6 +179,23 @@
                 }
             } 
         });
+      }
+    }
+  }]);
+
+  ngapp.factory('ConfirmService',["$uibModal", function ConfirmService($uibModal) {
+    return {
+      ask: function(question) {
+        var modalInstance = $uibModal.open({
+          animation: true,
+          component: 'askDialog',
+          resolve: {
+                question: function () {
+                    return question;
+                }
+            } 
+        });
+        return modalInstance.result;
       }
     }
   }]);

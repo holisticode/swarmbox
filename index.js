@@ -8,5 +8,6 @@ module.exports = function(swarmapp) {
   require("./app/directives/selectFolder");
   require("./app/components/dialogs/hashDialog");
   require("./app/components/dialogs/errorDialog");
+  require("./app/components/dialogs/askDialog");
   require("./app/components/dialogs/loadingSwarmboxDialog");
 };

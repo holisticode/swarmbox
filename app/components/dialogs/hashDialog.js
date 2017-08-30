@@ -5,7 +5,7 @@ angular.module('swarmapp').component('hashModalComponent', {
     close: '&',
     dismiss: '&'
   },
-  controller: function (Swarmbox, SwarmboxHash, $state) {
+  controller: function (PubSub, Swarmbox, SwarmboxHash, $state) {
     var $ctrl = this;
 
     $ctrl.currentDialogTitle = "Do you already have a Swarmbox configured?";
@@ -41,7 +41,7 @@ angular.module('swarmapp').component('hashModalComponent', {
         return console.log("Invalid swarmboxFolder");
       }
       $ctrl.uploadingFolder = true; 
-      
+      PubSub.publish("swarmboxfolder", $ctrl.swarmboxFolder);
       fs.stat($ctrl.swarmboxFolder,(err,stats) => {
         if (err) {
           $ctrl.close();

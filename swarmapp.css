@@ -104,6 +104,11 @@ menu {
   vertical-align: middle;
 }
 
+.sync-pane {
+  width: 45%;
+  padding: 40px 0;
+}
+
 .content-pane {
   width: 45%;
   height: 60vh;
@@ -326,4 +331,50 @@ hr {
 
 .textinput {
   color: blue;
+}
+
+#syncbox {
+  width: 30px;
+  height: 30px;
+  float: left;
+  background-color: transparent;
+  border: 1px solid #34a6ff;
+  margin: -2px 0 0 15px;
+  cursor: pointer;
+}
+
+.optionlabel {
+  color: white;
+  float:left;
+}
+
+.doSync {
+  background-color: #34a6ff !important;
+}
+
+.optionpane {
+  margin-left: 20px;
+  float:left;
+}
+
+.optionvalue {
+  color: #34a6ff;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.action-info {
+  margin-top: 10px;
+  color: #ddd;
+}
+
+.action-detail {
+  font-size: 0.8em;
+  color: #ddd;
+}
+
+.small {
+  width: 50px !important;
+  height: 50px !important;
+  background-image-size: 45px;
 }

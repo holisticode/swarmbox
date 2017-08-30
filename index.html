@@ -40,6 +40,19 @@
         </div>
       </script>
       </div>
+    <div class="dialog" id="askDialog">
+      <script type="text/ng-template" id="askDialog.html">
+        <div class="modal-header">
+          <h3>{{$ctrl.title}}</h3>
+        </div>
+        <div class="modal-body" id="dialogBody">
+          <div class="errorText">{{$ctrl.question}}
+          </div>
+          <button class="btn btn-big btn-primary yesno yes" type="submit" ng-click="$ctrl.ok()">Confirm</button>
+          <button class="btn btn-big yesno no" type="submit" ng-click="$ctrl.cancel()">Cancel</button>
+        </div>
+      </script>
+      </div>
     <footer>
     </footer>
     <script src="bower_components/angular/angular.min.js"></script>

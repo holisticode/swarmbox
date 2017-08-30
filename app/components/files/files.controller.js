@@ -10,9 +10,9 @@ var nodejspath = require("path");
 
 var swarmurl = ENDPOINT;
 
-FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory', 'Swarmbox', 'Endpoint'];
+FilesController.$inject = ['$http','$compile', '$scope','$uibModal','ErrorService','PubSub','StartState', 'SwarmboxHash', 'HashHistory', 'Swarmbox', 'Endpoint', 'ConfirmService'];
 
-function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory, Swarmbox, Endpoint) {
+function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,StartState,SwarmboxHash, HashHistory, Swarmbox, Endpoint, ConfirmService) {
 
   var uploadHereDefault     = "Drag files here to upload to Swarm";
 
@@ -23,8 +23,22 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
   $scope.animationsEnabled  = true;
   $scope.swarmboxHash       = "";
   $scope.uploadHere         = uploadHereDefault;
+  $scope.syncboxState       = false;
+  $scope.localFolder        = "None selected";
 
   readFolder(getOsHome());
+
+  PubSub.subscribe("swarmboxfolder", function(message) {
+    console.log(message);
+    if (message && fs.existsSync(message)) {
+      $scope.localFolder = message;
+      $scope.doSyncSwarmbox(message);
+    }
+  });
+
+  $scope.$watch('localFolder',function() {
+    PubSub.publish("swarmboxfolder", $scope.localFolder);
+  });
 
   var uploadbox = document.getElementById('uploadbox');
 
@@ -49,6 +63,10 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
     document.getElementById('uploadbox').style["background-size"] = "50px";
     $scope.uploadToSwarm(isDir, path);
   };
+
+  $scope.isSwarmboxMounted = function() {
+    return Swarmbox.isMounted;
+  }
 
   $scope.dropFromSwarmboxFolder = (destFolder, path, isDir) => {
     SwarmboxHash.getLastHash(StartState.isStarted(), function(err, h) {
@@ -245,6 +263,13 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
 
   }
 
+  $scope.toggleSync = function() {
+    $scope.syncboxState = !$scope.syncboxState;
+    if ($scope.syncboxState && $scope.localFolder == "None selected") {
+      document.querySelector("#localFolderSelector").click();
+    }  
+  }
+
   $scope.openHashDialog = function() {
     var modalInstance = $uibModal.open({
       animation: $scope.animationsEnabled,
@@ -284,6 +309,45 @@ function FilesController($http, $compile,$scope,$uibModal,ErrorService,PubSub,St
       //$log.info('modal-component dismissed at: ' + new Date());
     });
   };
+
+  $scope.doSyncSwarmbox = function(dir) {
+    var contents = fs.readdirSync(dir);
+
+    if (contents.length > 0) {
+      ConfirmService.ask("Your directory appears to not be empty. Swarmbox will be downloaded there. Are you sure?").then(
+        function(d) {
+          $scope.doDownloadBox(dir);
+          }
+        );
+    } else {
+      $scope.doDownloadBox(dir);
+    }
+  }
+
+  $scope.doDownloadBox = function(dir) {
+    console.log(dir);
+    Endpoint.getValidUrl(function(url) {
+      if (!url) {
+        console.log("Invalid URL");
+        return;
+      }
+      url = url + "/bzz:/" + $scope.swarmboxHash + "/";
+      $scope.downloadingBox = true;
+      request.get(url,{ headers: {"Accept":"application/x-tar"}, method: "GET", url:url})
+        .on("error", function(err) {
+          console.log("Error downloading swarmbox to local folder");
+          console.log(err);
+          ErrorService.showError("Uh oh - could not download your swarmbox to local folder");
+          return;
+        })
+        .on("response", function(response) {
+          $scope.downloadingBox = false;
+          console.log("Download of swarmbox completed");
+        })
+        .pipe(tar.extract(dir));
+        $scope.downloadingBox = false;
+    });
+  }
 
   var isStarted = StartState.isStarted();
 
